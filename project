@@ -1,0 +1,154 @@
+import datetime
+import json
+
+def load_tasks(file_name):
+    """Loads tasks from a file."""
+    tasks = []
+    try:
+        with open(file_name, 'r') as f:
+            tasks = json.load(f)
+    except FileNotFoundError:
+        pass
+    return tasks
+
+def save_tasks(file_name, tasks):
+    """Saves tasks to a file."""
+    with open(file_name, 'w') as f:
+        json.dump(tasks, f)
+
+def print_tasks(tasks):
+    """Prints the tasks in a user-friendly format."""
+    for i, task in enumerate(tasks, start=1):
+        print(f"{i}. {task['title']} - {task['status']} - Added on: {task['added_date']}")
+        if task['subtasks']:
+            print(f"  Subtasks:")
+            for j, subtask in enumerate(task['subtasks'], start=1):
+                print(f"  {j}. {subtask['title']} - {subtask['status']}")
+        print()
+
+def add_task(tasks, title, due_date=None, importance=None, subtasks=None):
+    """Adds a new task to the list of tasks."""
+    tasks.append({
+        'title': title,
+        'status': 'Not Done',
+        'due_date': due_date,
+        'importance': importance,
+        'subtasks': subtasks or [],
+        'added_date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+def add_subtask(tasks, main_task_num, subtask_title, subtask_status="Not Done"):
+    """Adds a new subtask to the specified main task."""
+    tasks[main_task_num]['subtasks'].append({'title': subtask_title, 'status': subtask_status})
+
+def mark_done(tasks, task_num):
+    """Marks the specified task as done."""
+    tasks[task_num]['status'] = "Done"
+
+def delete_task(tasks, task_num):
+    """Deletes the specified task."""
+    del tasks[task_num]
+
+def print_done_tasks(tasks):
+    """Prints the tasks that are marked as 'Done'."""
+    done_tasks = [task for task in tasks if task['status'] == 'Done']
+    if done_tasks:
+        for i, task in enumerate(done_tasks, start=1):
+            print(f"{i}. {task['title']} - {task['status']} - {task.get('done_date', '')}")
+            if task['subtasks']:
+                print(f"  Subtasks:")
+                for j, subtask in enumerate(task['subtasks'], start=1):
+                    print(f"  {j}. {subtask['title']} - {subtask['status']}")
+        print()
+    else:
+        print("No tasks are marked as done.")
+
+def mark_due_date(tasks, task_num, due_date):
+    """Marks the specified task with a due date."""
+    tasks[task_num]['due_date'] = due_date
+
+def mark_importance(tasks, task_num, importance):
+    """Marks the specified task with an importance level."""
+    tasks[task_num]['importance'] = importance.capitalize()
+
+def main():
+    tasks = load_tasks('tasks.txt')
+    while True:
+        print_tasks(tasks)
+        print("What do you want to do?")
+        print("1. Add a new task")
+        print("2. Add a subtask to an existing task")
+        print("3. Mark a task as done")
+        print("4. Delete a task")
+        print("5. Save tasks to file")
+        print("6. Load tasks from file")
+        print("7. Display all tasks")  # Swapped
+        print("8. Add importance level to a task")  # Swapped
+        print("9. Add due date to a task")
+        print("10. Quit")
+
+        try:
+            option = int(input("Enter your choice: "))
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+            continue
+
+        if option == 1:
+            title = input("Enter the task title: ")
+            due_date = input("Enter the due date (YYYY-MM-DD): ") if option == 10 else None
+            importance = input("Enter the importance level (Low, Medium, High): ") if option == 11 else None
+            add_task(tasks, title, due_date=due_date, importance=importance)
+        elif option == 2:
+            print_tasks(tasks)
+            main_task_num = int(input("Enter the number of the main task: "))
+            if 1 <= main_task_num <= len(tasks):
+                subtask_title = input("Enter the subtask title: ")
+                add_subtask(tasks, main_task_num - 1, subtask_title)
+            else:
+                print("Invalid task number.")
+        elif option == 3:
+            print_tasks(tasks)
+            task_num = int(input("Enter the number of the task to mark as done: "))
+            if 1 <= task_num <= len(tasks):
+                mark_done(tasks, task_num - 1)
+            else:
+                print("Invalid task number.")
+        elif option == 4:
+            print_tasks(tasks)
+            task_num = int(input("Enter the number of the task to delete: "))
+            if 1 <= task_num <= len(tasks):
+                delete_task(tasks, task_num - 1)
+            else:
+                print("Invalid task number.")
+        elif option == 5:
+            save_tasks('tasks.txt', tasks)
+            print("Tasks saved to file.")
+        elif option == 6:
+            tasks = load_tasks('tasks.txt')
+            print("Tasks loaded from file.")
+        elif option == 7:
+            print_tasks(tasks)
+        elif option == 8:
+            print_tasks(tasks)
+            task_num = int(input("Enter the number of the task to add an importance level: "))
+            if 1 <= task_num <= len(tasks):
+                importance = input("Enter the importance level (Low, Medium, High): ")
+                mark_importance(tasks, task_num - 1, importance)
+            else:
+                print("Invalid task number.")
+        elif option == 9:
+            print_tasks(tasks)
+            task_num = int(input("Enter the number of the task to add a due date: "))
+            if 1 <= task_num <= len(tasks):
+                due_date = input("Enter the due date (YYYY-MM-DD): ")
+                mark_due_date(tasks, task_num - 1, due_date)
+            else:
+                print("Invalid task number.")
+        elif option == 10:
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please choose again.")
+
+if __name__ == '__main__':
+    main()
